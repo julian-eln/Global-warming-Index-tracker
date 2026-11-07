@@ -31,3 +31,14 @@ def history(df, value_col, year_col="year"):
         "value": pd.to_numeric(df[value_col]),}).dropna().sort_values("year")
     sets = [{"year": int(y), "value": round(float(v), 3)} for y, v in clean.itertuples(index=False, name=None)]
     return sets
+    
+def latest(df, value_col, year_col="year"):
+    if value_col not in df or year_col not in df:
+            return []
+    clean = pd.DataFrame({
+        "year": pd.to_numeric(df[year_col]),
+        "value": pd.to_numeric(df[value_col])}).dropna().sort_values("year")
+    if clean.empty:
+        return []
+    latest_row = clean.iloc[-1]
+    return [{"year": int(latest_row[year_col]), "value": round(float(latest_row[value_col]), 3)}]
