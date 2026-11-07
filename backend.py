@@ -44,6 +44,17 @@ def latest(df, value_col, year_col="year"):
     # latest_row[value_col] (e.g. "mean"), a column that no longer existed: KeyError.
     return history(df, value_col, year_col)[-1:]
 
+def impact():
+    trees =  0
+    waste = 0.0
+    if impact_data.exists():
+        with open(impact_data, 'r') as data:
+            for row in csv.DictReader(data):
+                trees += int(row.get('trees', 0))
+                waste += float(row.get('waste', 0))
+    waste_plant_ratio = {"trees planted": trees, "waste picked up": round(waste,3)} 
+    return waste_plant_ratio
+    
 
 if __name__ == "__main__":
     # FIX: without this, running the file did nothing.
