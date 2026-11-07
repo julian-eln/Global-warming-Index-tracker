@@ -65,3 +65,7 @@ desktop.ini
 
 # Keep your shared JSON file tracked so you both have sample data!
 !Data/dashboard_data.json
+
+# Python raw-download cache (re-downloadable; keep it out of git)
+python/cache/
+Data/*.tmp
