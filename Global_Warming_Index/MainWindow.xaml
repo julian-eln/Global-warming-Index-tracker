@@ -6,7 +6,20 @@
         xmlns:local="clr-namespace:Global_Warming_Index"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+    <Grid Background="#FF310000">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="29*"/>
+            <RowDefinition Height="392*"/>
+        </Grid.RowDefinitions>
+        <Label Content="Commonly cited Doomsday Thresholds:  +1.5C (Paris Agreement)  +2.0C(Ice sheet Collapse), Atmospheric CO2 &gt;350ppm &gt;560 ppm CO2-equivalent (CO2e)" HorizontalAlignment="Left" Height="38" Margin="0,6,0,0" VerticalAlignment="Top" Width="793" Foreground="#FFFFC77A" Grid.RowSpan="2" Background="{x:Null}" FontSize="11"/>
+        <Image HorizontalAlignment="Left" Height="100" Margin="291,251,0,0" VerticalAlignment="Top" Width="100" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="100" Margin="329,126.333,0,0" Grid.Row="1" VerticalAlignment="Top" Width="100">
+            <Image.OpacityMask>
+                <ImageBrush/>
+            </Image.OpacityMask>
+        </Image>
+        <TextBlock x:Name="jj" HorizontalAlignment="Left" Margin="312,204.333,0,0" Grid.Row="1" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>
+        <TextBox x:Name="current" HorizontalAlignment="Left" Height="23" Margin="0,9.333,0,0" Grid.Row="1" TextWrapping="Wrap" Text="Current  stats: temp in Celsius  Atmospheric CO2  CO2-equivalent (CO2e)" VerticalAlignment="Top" Width="783"/>
+
     </Grid>
 </Window>

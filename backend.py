@@ -1,27 +1,33 @@
+import urllib.request
 import csv
 import json
 import pandas as pd
 from pathlib import Path
-import datetime
+from datetime import datetime      # FIX: was "import datetime", which made datetime.now() crash
 
 URLS = {
     "temperature": "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv",
     "co2_ppm": "https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.csv",
     "emissions": "https://owid-public.owid.io/data/co2/owid-co2-data.csv",}
 data = Path.home() / '.climate_data'
-data.mkdir()
+data.mkdir(parents=True, exist_ok=True)   # FIX: plain mkdir() crashed if the folder already existed
 
 def load_data(name):
     file = data / f"{name}.csv"
     age = datetime.now().timestamp() - file.stat().st_mtime if file.exists() else None
     if age is None or age > 86400:
-        df = pd.read_csv(URLS[name])
-        df.to_csv(file, index=False)
+        # FIX: save the raw file exactly as downloaded. The old version parsed it first,
+        # which fails on NOAA's "#" comment lines and NASA's title line.
+        urllib.request.urlretrieve(URLS[name], file)
+
+    # Each source needs different options to read correctly.
+    # FIX: every source now gets a branch. Before, "emissions" crashed when cached.
     if name == "temperature":
-        df = pd.read_csv(file)
+        return pd.read_csv(file, skiprows=1, na_values="***")   # skip title line; NASA uses *** for missing
     if name == "co2_ppm":
-        df = pd.read_csv(file, skiprows=56)
-    return df
+        return pd.read_csv(file, comment="#")   # FIX: was skiprows=56, which breaks if NOAA edits its header
+    return pd.read_csv(file)
+
 
 def history(df, value_col, year_col="year"):
     if value_col not in df or year_col not in df:
@@ -33,12 +39,14 @@ def history(df, value_col, year_col="year"):
     return sets
     
 def latest(df, value_col, year_col="year"):
-    if value_col not in df or year_col not in df:
-            return []
-    clean = pd.DataFrame({
-        "year": pd.to_numeric(df[year_col]),
-        "value": pd.to_numeric(df[value_col])}).dropna().sort_values("year")
-    if clean.empty:
-        return []
-    latest_row = clean.iloc[-1]
-    return [{"year": int(latest_row[year_col]), "value": round(float(latest_row[value_col]), 3)}]
+    """Just the most recent year's value."""
+    # FIX: reuses history() instead of repeating its code. The old version looked up
+    # latest_row[value_col] (e.g. "mean"), a column that no longer existed: KeyError.
+    return history(df, value_col, year_col)[-1:]
+
+
+if __name__ == "__main__":
+    # FIX: without this, running the file did nothing.
+    # This print is what your C# reads, so it must be the ONLY thing printed.
+    df = load_data("co2_ppm")
+    print(latest(df, "mean")[0]["value"])
