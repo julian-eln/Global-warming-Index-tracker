@@ -1,0 +1,67 @@
+# ==========================================
+# C# & Visual Studio (Your Side)
+# ==========================================
+.vs/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ==========================================
+# Python, VS Code & PyInstaller (Partner's Side)
+# ==========================================
+.vscode/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments (Crucial - prevents pushing 5,000+ library files)
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# PyInstaller build folders (if you compile Python to .exe at the end)
+build/
+dist/
+*.spec
+
+# Jupyter Notebooks & Pandas cache
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ==========================================
+# API Keys & Secrets (Never commit these)
+# ==========================================
+.env
+*.env
+secrets.json
+
+# ==========================================
+# OS Junk Files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Shared Data Folder Rules
+# ==========================================
+# Ignore temporary SQLite lock files if you ever test SQLite
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Keep your shared JSON file tracked so you both have sample data!
+!Data/dashboard_data.json
