@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "thresholds": [
+    {
+      "id": "paris_1_5c",
+      "label": "Paris Agreement aspirational limit",
+      "value": 1.5,
+      "unit": "°C above pre-industrial",
+      "compare_to": "temp_anomaly",
+      "source": "UNFCCC Paris Agreement",
+      "note": "Measured as a long-term (multi-decade) average, not a single year."
+    },
+    {
+      "id": "paris_2c",
+      "label": "Paris Agreement upper limit",
+      "value": 2.0,
+      "unit": "°C above pre-industrial",
+      "compare_to": "temp_anomaly",
+      "source": "UNFCCC Paris Agreement",
+      "note": null
+    },
+    {
+      "id": "carbon_budget_1_5c",
+      "label": "Remaining CO2 budget for 1.5 °C (50% chance)",
+      "value": null,
+      "unit": "GtCO2",
+      "compare_to": "co2_emissions_annual",
+      "source": "TODO: Global Carbon Budget / Indicators of Global Climate Change (latest edition)",
+      "note": "Look up the latest published figure and its base year; the countdown is budget minus emissions since that year."
+    }
+  ],
+  "indicators": [
+    { "id": "co2_ppm", "label": "Atmospheric CO2", "value": 0.0, "unit": "ppm", "as_of": "2026-01", "source": "SAMPLE", "source_url": null },
+    { "id": "ch4_ppb", "label": "Atmospheric methane", "value": 0.0, "unit": "ppb", "as_of": "2026-01", "source": "SAMPLE", "source_url": null },
+    { "id": "n2o_ppb", "label": "Atmospheric nitrous oxide", "value": 0.0, "unit": "ppb", "as_of": "2026-01", "source": "SAMPLE", "source_url": null },
+    { "id": "temp_anomaly", "label": "Global temperature anomaly", "value": 0.0, "unit": "°C vs baseline", "as_of": "2026-01", "source": "SAMPLE", "source_url": null },
+    { "id": "co2_emissions_annual", "label": "Global CO2 emissions (latest year)", "value": 0.0, "unit": "GtCO2/yr", "as_of": "2025", "source": "SAMPLE", "source_url": null }
+  ],
+  "timeseries": {
+    "co2_ppm": [
+      { "date": "2025-11", "value": 0.0 },
+      { "date": "2025-12", "value": 0.0 },
+      { "date": "2026-01", "value": 0.0 }
+    ],
+    "temp_anomaly": [
+      { "date": "2023", "value": 0.0 },
+      { "date": "2024", "value": 0.0 },
+      { "date": "2025", "value": 0.0 }
+    ]
+  },
+  "top_emitters": {
+    "total": [
+      { "iso_code": "AAA", "name": "Sample Country A", "value": 0.0, "unit": "MtCO2", "year": 2024 }
+    ],
+    "per_capita": [
+      { "iso_code": "BBB", "name": "Sample Country B", "value": 0.0, "unit": "tCO2/person", "year": 2024 }
+    ]
+  },
+  "green_investment": {
+    "etfs": [
+      { "ticker": "ICLN", "name": "iShares Global Clean Energy ETF", "price": 0.0, "volume": 0, "total_assets": null, "as_of": "2026-01-01", "source": "SAMPLE" }
+    ],
+    "official_spending": []
+  },
+  "cleanup": {
+    "trees_planted": { "value": null, "unit": "trees", "as_of": null, "source": "TODO: manual entry" },
+    "waste_removed": { "value": null, "unit": "lbs", "as_of": null, "source": "TODO: manual entry" }
+  },
+  "disasters": []
+}
