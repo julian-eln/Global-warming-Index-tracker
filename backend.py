@@ -8,9 +8,14 @@ from datetime import datetime      # FIX: was "import datetime", which made date
 URLS = {
     "temperature": "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv",
     "co2_ppm": "https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.csv",
-    "emissions": "https://owid-public.owid.io/data/co2/owid-co2-data.csv",}
+    "emissions": "https://owid-public.owid.io/data/co2/owid-co2-data.csv", 
+    "green_investment":"https://ourworldindata.org/grapher/investment-in-renewable-energy-by-technology.csv",
+    "ev_adoption":"https://ourworldindata.org/grapher/electric-car-sales-share.csv",
+    "ev_sales":"https://ourworldindata.org/grapher/electric-car-sales.csv",
+    "renewable_electricity":"https://ourworldindata.org/grapher/electricity-mix.csv"}
 data = Path.home() / '.climate_data'
 data.mkdir(parents=True, exist_ok=True)   # FIX: plain mkdir() crashed if the folder already existed
+impact_data = data / 'impact.csv'
 
 def load_data(name):
     file = data / f"{name}.csv"
@@ -54,10 +59,63 @@ def impact():
                 waste += float(row.get('waste', 0))
     waste_plant_ratio = {"trees planted": trees, "waste picked up": round(waste,3)} 
     return waste_plant_ratio
-    
+
+
+def get_world_data(name):
+    df = load_data(name)
+    if "Entity" in df.columns:
+        df = df[df["Entity"].isin(["World", "Global"])]
+    if df.empty:
+        print(f"No global data found for {name}")
+    year_col = "Year" if "Year" in df.columns else "year"
+    if year_col not in df.columns:
+       print('Year column not found')
+    df = df.copy()
+    df[year_col] = pd.to_numeric(df[year_col])  
+    return df.dropna(subset=[year_col]).sort_values(year_col)
+
+
+def get_dataset_values(name):
+    df = get_world_data(name)
+    year_col = "Year" if "Year" in df.columns else "year"
+    columns = [c for c in df.columns if c not in ["Entity", "Code", "Year", "year"]]
+    result = {}
+    for column in columns:
+        series = df[[year_col, column]].copy()
+        series[column] = pd.to_numeric(series[column])
+        series = series.dropna()
+        if series.empty:
+            continue
+        result[column] = {
+            "latest_year": int(series.iloc[-1][year_col]),
+            "latest_value": float(series.iloc[-1][column]),
+            "history": [{"year": int(row[year_col]),"value": float(row[column]) } for _, row in series.iterrows()]}
+    if not result:
+        print(f"No numeric values found in {name}")
+    return result
+
+
+def green_energy_investment():
+    return {"metric": "Renewable-energy investment by technology",
+            "data": get_dataset_values("green_investment"),"source": URLS["green_investment"]}
+
+
+def top_countries(metric="total", count=20):
+    df = load_data("emissions")
+    column = "co2" if metric == "total" else "co2_per_capita"
+    df = df[df["iso_code"].str.len() == 3]
+    df = df[df["iso_code"].str.startswith("OWID")]
+    df = df.sort_values("year").drop_duplicates(subset="country", keep="last")
+    df = df.dropna(subset=[column])
+    df = df.nlargest(count, column)
+
+    return [{"country": row["country"],"year": int(row["year"]),"value": float(row[column])}for _, row in df.iterrows()]
+
+
+
 
 if __name__ == "__main__":
     # FIX: without this, running the file did nothing.
     # This print is what your C# reads, so it must be the ONLY thing printed.
     df = load_data("co2_ppm")
-    print(latest(df, "mean")[0]["value"])
+    print(latest(df, "mean")[0]["value"]) 
