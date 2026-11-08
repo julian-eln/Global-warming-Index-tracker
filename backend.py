@@ -38,8 +38,8 @@ def history(df, value_col, year_col="year"):
     if value_col not in df or year_col not in df:
         return []
     clean = pd.DataFrame({
-        "year": pd.to_numeric(df[year_col]),
-        "value": pd.to_numeric(df[value_col]),}).dropna().sort_values("year")
+        "year": pd.to_numeric(df[year_col], errors="coerce"),
+        "value": pd.to_numeric(df[value_col], errors="coerce"),}).dropna().sort_values("year")
     sets = [{"year": int(y), "value": round(float(v), 3)} for y, v in clean.itertuples(index=False, name=None)]
     return sets
     
@@ -115,7 +115,28 @@ def top_countries(metric="total", count=20):
 
 
 if __name__ == "__main__":
-    # FIX: without this, running the file did nothing.
-    # This print is what your C# reads, so it must be the ONLY thing printed.
-    df = load_data("co2_ppm")
-    print(latest(df, "mean")[0]["value"]) 
+    import sys
+
+    # Which column holds the value and which holds the year, for each source
+    COLUMNS = {"co2_ppm": ("mean", "year"), "temperature": ("J-D", "Year")}
+
+    # The first word after "backend.py" says what C# wants. No word = latest CO2.
+    what = sys.argv[1] if len(sys.argv) > 1 else "co2_ppm"
+
+    if what == "history":
+        # "python backend.py history co2_ppm" -> one "year,value" line per year (for the chart)
+        source = sys.argv[2]
+        value_col, year_col = COLUMNS[source]
+        for point in history(load_data(source), value_col, year_col):
+            print(f"{point['year']},{point['value']}")
+    elif what == "trees":
+        print(impact()["trees planted"])
+    elif what == "waste":
+        print(impact()["waste picked up"])
+    elif what in COLUMNS:
+        # "python backend.py temperature" -> latest value only
+        # This print is what your C# reads, so it must be the ONLY thing printed.
+        value_col, year_col = COLUMNS[what]
+        print(latest(load_data(what), value_col, year_col)[0]["value"])
+    else:
+        sys.exit(f"Unknown source: {what}")

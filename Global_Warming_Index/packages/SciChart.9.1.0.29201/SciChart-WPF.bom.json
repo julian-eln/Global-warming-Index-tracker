@@ -1,0 +1,145 @@
+﻿{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:f83aeae5-2da4-4b20-bff7-77b49ddd2d91",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2025-09-09T15:11:27Z",
+        "lifecycles": [
+            {
+                "phase": "build"
+            }
+        ],
+        "component": {
+            "bom-ref": "pkg:nuget/SciChart@9.1.0.29201",
+            "type": "library",
+            "name": "SciChart (WPF)",
+            "version": "9.1.0.29201",
+            "description": "SciChart WPF is a 2D and 3D Charting component written in C# .NET",
+            "copyright": "Copyright (C) SciChart Ltd 2011-2026",
+            "purl": "pkg:nuget/SciChart@9.1.0.29201",
+            "licenses": [
+                {
+                    "license": {
+                        "name": "SciChart EULA",
+                        "url": "https://www.scichart.com/scichart-eula/"
+                    }
+                }
+            ]
+        }
+    },
+    "components": [
+        {
+            "type": "library",
+            "name": "WriteableBitmapEx",
+            "version": "1.0.3",
+            "bom-ref": "pkg:nuget/WriteableBitmapEx@1.0.3",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "MIT",
+                        "url": "https://spdx.org/licenses/MIT.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "AggSharp",
+            "version": "1.5.2",
+            "bom-ref": "pkg:github/MatterHackers/agg-sharp",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "BSD-2-Clause",
+                        "url": "https://spdx.org/licenses/BSD-2-Clause.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "LibSodium",
+            "version": "1.0.18",
+            "bom-ref": "pkg:github/jedisct1/libsodium",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "ISC",
+                        "url": "https://spdx.org/licenses/ISC.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "HowardHinnant-date",
+            "version": "2.4.1",
+            "bom-ref": "pkg:github/HowardHinnant/date",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "MIT",
+                        "url": "https://spdx.org/licenses/MIT.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "Nlohmann-json",
+            "version": "3.6.1",
+            "bom-ref": "pkg:github/nlohmann/json",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "MIT",
+                        "url": "https://spdx.org/licenses/MIT.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "SDL",
+            "version": "1.2.15",
+            "bom-ref": "pkg:github/libsdl-org/SDL",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Zlib",
+                        "url": "https://spdx.org/licenses/Zlib.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "Freetype",
+            "version": "2.12.1",
+            "bom-ref": "pkg:github/freetype/freetype",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "FTL",
+                        "url": "https://spdx.org/licenses/FTL.html"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "name": "Harfbuzz",
+            "version": "2.9.0",
+            "bom-ref": "pkg:github/Harfbuzz/Harfbuzz",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "MIT",
+                        "url": "https://spdx.org/licenses/MIT.html"
+                    }
+                }
+            ]
+        }
+    ]
+}
