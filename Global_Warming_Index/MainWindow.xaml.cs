@@ -20,6 +20,7 @@ namespace Global_Warming_Index
                 double temp  = GetLatest("temperature");
                 double trees = GetLatest("trees");
                 double waste = GetLatest("waste");
+                double investment = GetLatest("money");
                 current.Text = $"CO2: {co2} ppm   Temp anomaly: +{temp} °C   " +
                                $"Trees planted: {trees:N0}   Waste collected: {waste:N0} lbs";
 

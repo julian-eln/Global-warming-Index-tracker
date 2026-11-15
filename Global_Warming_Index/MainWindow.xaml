@@ -18,7 +18,7 @@
                    Text="Commonly cited thresholds:  +1.5 °C (Paris goal)   +2.0 °C (Paris upper limit)   CO2 350 ppm (safe level)   560 ppm CO2e (double pre-industrial)"/>
 
         <!-- Row 1: latest values (and any error message) -->
-        <TextBlock x:Name="current" Margin="10,26,-0.667,492.667" Foreground="White" FontSize="20" TextWrapping="Wrap"
+        <TextBlock x:Name="current" Margin="10,26,-0.667,451.667" Foreground="White" FontSize="20" TextWrapping="Wrap"
                    Text="Loading..." Grid.RowSpan="3"/>
 
         <!-- Row 2: the chart. x:Name lets the C# code draw on it -->
