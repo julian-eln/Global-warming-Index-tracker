@@ -37,7 +37,6 @@ def scrape_count(url, pattern):
     return int(next(g for g in m.groups() if g))   # first group that matched
 
 
-
 def load_data(name):
     file = data / f"{name}.csv"
     age = datetime.now().timestamp() - file.stat().st_mtime if file.exists() else None
@@ -50,8 +49,8 @@ def load_data(name):
     if name == "temperature":
         return pd.read_csv(file, skiprows=1, na_values="***")   # skip title line; NASA uses *** for missing
     if name == "co2_ppm":
-        return pd.read_csv(file, comment="#")   # FIX: was skiprows=56, which breaks if NOAA edits its header
-    return pd.read_csv(file)
+        return pd.read_csv(file, comment="#")   # NOAA's file starts with "#" comment lines
+    return pd.read_csv(file)                    # OWID files: header on line 1, works as-is
 
 
 def history(df, value_col, year_col="year"):
@@ -137,15 +136,19 @@ def get_dataset_values(name):
 def green_energy_investment():
     return {"metric": "Renewable-energy investment by technology",
             "data": get_dataset_values("green_investment"),"source": URLS["green_investment"]}
+def ev_sales():
+    return {"metric": "Electric cars sold",
+            "data": get_dataset_values("ev_sales"),
+            "source": URLS["ev_sales"]}
 
 
 def top_countries(metric="total", count=20):
     df = load_data("emissions")
     column = "co2" if metric == "total" else "co2_per_capita"
     df = df[df["iso_code"].str.len() == 3]
-    df = df[~df["iso_code"].str.startswith("OWID", na=False)]   # FIX: was keeping World/continents instead of countries
-    df = df.sort_values("year").drop_duplicates(subset="country", keep="last")
-    df = df.dropna(subset=[column])
+    df = df[~df["iso_code"].str.startswith("OWID", na=False)]   # real countries only
+    df = df.dropna(subset=[column])                              # FIX: drop missing values FIRST...
+    df = df.sort_values("year").drop_duplicates(subset="country", keep="last")  # ...then take each country's latest
     df = df.nlargest(count, column)
 
     return [{"country": row["country"],"year": int(row["year"]),"value": float(row[column])}for _, row in df.iterrows()]
@@ -168,12 +171,45 @@ if __name__ == "__main__":
         print(impact()["trees planted"])
     elif what == "waste":
         print(impact()["waste picked up"])
-    elif what == "money":
-        print(json.dumps(green_energy_investment()))
+    elif what == "money_total":
+        # total renewable investment in the latest year, in billions of USD
+        values = green_energy_investment()["data"].values()
+        print(round(sum(v["latest_value"] for v in values) / 1e9, 1))
+    elif what == "money_bars":
+        # One line per technology, biggest first: "Wind Energy|142.7"  ($ billions, latest year)
+        techs = green_energy_investment()["data"]
+        rows = sorted(techs.items(), key=lambda kv: kv[1]["latest_value"], reverse=True)
+        for name, info in rows:
+            print(f"{name}|{info['latest_value'] / 1e9:.1f}")
+    elif what == "evsales":
+        # One line per year: "2025|21200000"
+        for name, info in ev_sales()["data"].items():
+            for point in info["history"]:
+                print(f"{point['year']}|{point['value']:.0f}")
+    elif what == "evadoption":
+        # Latest World share of new cars that are electric, as two pie slices
+        col = "Share of new cars that are electric"
+        df = get_world_data("ev_adoption").dropna(subset=[col])
+        latest_row = df.iloc[-1]
+        share = float(latest_row[col])
+        print(f"Electric ({int(latest_row['Year'])})|{share}")
+        print(f"Not electric|{100 - share}")
+    elif what == "world":
+        # "python backend.py world ev_adoption" -> CSV: Year,<col1>,<col2>,...  (for looking at data)
+        if len(sys.argv) < 3 or sys.argv[2] not in URLS:
+            sys.exit(f"Usage: python backend.py world <{'|'.join(URLS)}>")
+        df = get_world_data(sys.argv[2]).drop(columns=["Entity", "Code"], errors="ignore")
+        print(df.to_csv(index=False), end="")
     elif what in COLUMNS:
         # "python backend.py temperature" -> latest value only
         # This print is what your C# reads, so it must be the ONLY thing printed.
         value_col, year_col = COLUMNS[what]
         print(latest(load_data(what), value_col, year_col)[0]["value"])
+    elif what == "top":
+        # "python backend.py top total 20" -> "China|11903.0" ... (largest first)
+        metric = sys.argv[2] if len(sys.argv) > 2 else "total"
+        count = int(sys.argv[3]) if len(sys.argv) > 3 else 20
+        for c in top_countries(metric, count):
+            print(f"{c['country']}|{c['value']}")
     else:
         sys.exit(f"Unknown source: {what}")
