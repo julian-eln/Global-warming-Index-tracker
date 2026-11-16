@@ -1,60 +1,94 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;      // lets C# run Python
-using System.Globalization;    // for parsing "424.61" correctly
-using System.Linq;             // for .Select(...) and .ToArray()
+using System.Diagnostics;          // lets C# run Python
+using System.Globalization;        // for parsing "424.61" correctly
+using System.Linq;                 // for .Select(...), .Sum(...), .Last()
+using System.Threading.Tasks;      // for Task.Run and async/await
 using System.Windows;
+using System.Windows.Threading;    // for DispatcherTimer
 
 namespace Global_Warming_Index
 {
     public partial class MainWindow : Window
     {
+        // How often the numbers in the text line are reloaded from Python
+        private static readonly TimeSpan RefreshInterval = TimeSpan.FromMinutes(10);
+
+        private bool refreshing = false;    // stops two refreshes running at the same time
+
         public MainWindow()
         {
             InitializeComponent();   // builds the controls from the XAML; must come first
 
+            // Charts: loaded once, right here, the same way as before
             try
             {
-                // 1. Latest values -> text at the top (each call runs backend.py once)
-                double co2 = GetLatest("co2_ppm");
-                double temp = GetLatest("temperature");
-                double trees = GetLatest("trees");
-                double waste = GetLatest("waste");
-                double investment = GetLatest("money_total");   // one number in $ billions
-                double evsales = GetEVSales();
-              
-                current.Text = $"CO2: {co2} ppm   Temp anomaly: +{temp} °C   " +
-                               $"Trees planted: {trees:N0}   Waste collected: {waste:N0} lbs   " +
-                               $"Renewable investment: ${investment:N1}B (2019)"+$" EV`s Sold: {evsales:N1} (as of 2019)";
-
-                // 2. Every year -> line chart
-                var co2History = GetHistory("co2_ppm");
-
-                // A chart needs two arrays: x values (years) and y values (ppm)
-                double[] years = co2History.Select(pt => (double)pt.Year).ToArray();
-                double[] values = co2History.Select(pt => pt.Value).ToArray();
-
-                co2Chart.Plot.Add.Scatter(years, values);   // the CO2 curve
-                co2Chart.Plot.Add.HorizontalLine(350);      // the 350 ppm "safe level" line
-                co2Chart.Plot.Title("Atmospheric CO2 (Mauna Loa)");
-                co2Chart.Plot.XLabel("Year");
-                co2Chart.Plot.YLabel("ppm");
-                co2Chart.Refresh();                          // required: redraws with the new data
-
-                // 3. Top emitting countries -> bar chart
-                DrawTopCountries("total", 15);               // or "per_capita"
-                DrawHorizontalBars(investChart, GetInvestmentByTech(),
-                   "Renewable investment by technology (2019)", "$ billions");
-                DrawEVAdoptionPie();
-
+                DrawCo2Chart(GetHistory("co2_ppm"));
+                DrawHorizontalBars(topChart, GetLabeledValues("top total 15"), "Top CO2 emitters", "Million tonnes CO2 per year");
+                DrawHorizontalBars(investChart, GetLabeledValues("money_bars"), "Renewable investment by technology (2019)", "$ billions");
+                DrawEVAdoptionPie(GetLabeledValues("evadoption"));
             }
             catch (Exception ex)
             {
-                // Without this catch, any error here crashes the window with a XamlParseException
-                current.FontSize = 12;
-                current.Text = ex.Message;
-                Debug.WriteLine(ex);
+                ShowError(ex);
             }
+
+            // Timer: reload just the numbers every RefreshInterval
+            var refreshTimer = new DispatcherTimer { Interval = RefreshInterval };
+            refreshTimer.Tick += async (s, e) => await RefreshNumbersAsync();
+            refreshTimer.Start();
+
+            // Numbers: first load as soon as the window is on screen, then every RefreshInterval
+            Loaded += async (s, e) => await RefreshNumbersAsync();
+        }
+
+        // Re-runs only the commands behind the numbers in the text line (the doubles)
+        private async Task RefreshNumbersAsync()
+        {
+            if (refreshing) return;   // the previous refresh is still running; skip this one
+            refreshing = true;
+
+            try
+            {
+                // 1. BACKGROUND: run Python. Task.Run moves this work off the UI thread,
+                //    so the window doesn't freeze while Python is working.
+                var d = await Task.Run(() => new
+                {
+                    co2 = GetLatest("co2_ppm"),
+                    temp = GetLatest("temperature"),
+                    trees = GetLatest("trees"),
+                    waste = GetLatest("waste"),
+                    investment = GetLatest("money_total"),   // $ billions, 2019
+                    raised = GetLatest("Stock"),         // $ billions, last 12 months
+                    capex = GetLatest("capex"),         // $ billions, last 12 months
+                    ev = GetLabeledValues("evsales"),
+                });
+
+                // 2. UI THREAD: "await" brings us back here, where it's safe to change the screen
+                double evsales = d.ev.Sum(p => p.Value);                  // total since 2010
+
+                current.FontSize = 20;
+                double investment = d.investment + d.capex;               // 2019 total + company capex (last 12 mo)
+                current.Text = $"CO2: {d.co2} ppm  Temp anomaly: +{d.temp} °C " +
+                               $"Trees planted:{d.trees:N0} Waste collected: {d.waste:N0}kg" + 
+                               $"\nRenewable investment: ${investment:N1} (2019(public institution grants) Capex(This Year)" +  $" \n EV`s Sold: {evsales:N1} (as of 2019)" + $" Clean-energy companies, last 12 mo: raised :${d.raised:N1}";
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
+            finally
+            {
+                refreshing = false;   // always runs, even after an error, so the next refresh can happen
+            }
+        }
+
+        // Any Python or parsing error shows in the text line instead of crashing the window
+        private void ShowError(Exception ex)
+        {
+            current.FontSize = 12;
+            current.Text = ex.Message;
+            Debug.WriteLine(ex);
         }
 
         // Finds the repo folder on any PC by walking up from bin\Debug until backend.py appears
@@ -89,13 +123,12 @@ namespace Global_Warming_Index
                 p.WaitForExit();
 
                 if (p.ExitCode != 0)
-                    throw new Exception("Python failed:\n" + errors);
+                    throw new Exception($"Python failed ({arguments}):\n" + errors);
                 return output;
             }
         }
 
-        // "python backend.py co2_ppm" prints one number, e.g. "424.61"
-        // Works for "co2_ppm", "temperature", "trees", "waste" and "money_total"
+        // For commands that print one number, e.g. "424.61"
         private double GetLatest(string source)
         {
             return double.Parse(RunPython(source).Trim(), CultureInfo.InvariantCulture);
@@ -105,7 +138,6 @@ namespace Global_Warming_Index
         private List<(int Year, double Value)> GetHistory(string source)
         {
             string output = RunPython("history " + source);
-
             var points = new List<(int Year, double Value)>();
             foreach (string line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -115,12 +147,11 @@ namespace Global_Warming_Index
             return points;
         }
 
-        // "python backend.py top total 15" prints one "Country|value" line per country, largest first
-        private List<(string Country, double Value)> GetTopCountries(string metric, int count = 20)
+        // For commands that print "label|value" lines (top, money_bars, evsales, evadoption)
+        private List<(string Label, double Value)> GetLabeledValues(string command)
         {
-            string output = RunPython($"top {metric} {count}");
-            var points = new List<(string Country, double Value)>();
-
+            string output = RunPython(command);
+            var points = new List<(string Label, double Value)>();
             foreach (string line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 string[] parts = line.Trim().Split('|');   // "China|11903.0" -> ["China", "11903.0"]
@@ -129,56 +160,23 @@ namespace Global_Warming_Index
             return points;
         }
 
-        // Draws the top countries as horizontal bars in topChart
-        private void DrawTopCountries(string metric, int count = 20)
+        // CO2 line chart with the 350 ppm "safe level" line
+        private void DrawCo2Chart(List<(int Year, double Value)> history)
         {
-            var points = GetTopCountries(metric, count);
-            int n = points.Count;
+            double[] years = history.Select(pt => (double)pt.Year).ToArray();
+            double[] values = history.Select(pt => pt.Value).ToArray();
 
-            double[] values = points.Select(p => p.Value).ToArray();
-            string[] names = points.Select(p => p.Country).ToArray();
-            double[] positions = Enumerable.Range(0, n).Select(i => (double)(n - 1 - i)).ToArray();  // largest at top
-
-            var plot = topChart.Plot;
-            plot.Clear();
-            var bars = plot.Add.Bars(positions, values);
-            bars.Horizontal = true;
-            plot.Axes.Left.SetTicks(positions, names);    // country names down the side
-            plot.Axes.Margins(left: 0);                   // bars start at the axis
-            bool total = metric == "total";
-            plot.Title(total ? "Top CO2 emitters" : "Top CO2 emitters per person");
-            plot.XLabel(total ? "Million tonnes CO2 per year" : "Tonnes CO2 per person");
-            topChart.Refresh();
+            var plot = co2Chart.Plot;
+            plot.Clear();                         // needed now: without it, every refresh adds another line
+            plot.Add.Scatter(years, values);
+            plot.Add.HorizontalLine(350);
+            plot.Title("Atmospheric CO2 (Mauna Loa)");
+            plot.XLabel("Year");
+            plot.YLabel("ppm");
+            plot.Axes.AutoScale();                // fit the axes to the data (see note in DrawHorizontalBars)
+            co2Chart.Refresh();
         }
-        private List<(string Label, double Value)> GetInvestmentByTech()
-        {
-            string output = RunPython("money_bars");
-            var points = new List<(string Label, double Value)>();
-            foreach (string line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string[] parts = line.Trim().Split('|');   // "Wind Energy|142.7" -> ["Wind Energy", "142.7"]
-                points.Add((parts[0], double.Parse(parts[1], CultureInfo.InvariantCulture)));
-            }
-            return points;
 
-        }
-        private double GetEVSales() 
-        {
-            string output = RunPython("evsales");
-            var points = new List<(string Label, double Value)>();
-            double sales = 0;
-            foreach (string line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string[] parts = line.Trim().Split('|');   
-                points.Add((parts[0], double.Parse(parts[1], CultureInfo.InvariantCulture)));
-            }
-            for (int i = 0; i < points.Count; i++)
-            {
-                sales = points[i].Value + sales;
-            }
-            return sales;
-
-        }
         // Draws any list of (label, value) as horizontal bars, first item at the top
         private void DrawHorizontalBars(ScottPlot.WPF.WpfPlot chart,
                                         List<(string Label, double Value)> points,
@@ -197,24 +195,15 @@ namespace Global_Warming_Index
             plot.Axes.Margins(left: 0);
             plot.Title(title);
             plot.XLabel(xLabel);
+            // Fit the axes to the data. Needed when a chart is drawn AFTER it has already appeared on screen:
+            // ScottPlot fixes the axis range at the first render, so without this the data can be off-screen.
+            plot.Axes.AutoScale();
             chart.Refresh();
         }
-        // Runs any command that prints "label|value" lines and returns them as a list
-        private List<(string Label, double Value)> GetLabeledValues(string command)
-        {
-            string output = RunPython(command);
-            var points = new List<(string Label, double Value)>();
-            foreach (string line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string[] parts = line.Trim().Split('|');
-                points.Add((parts[0], double.Parse(parts[1], CultureInfo.InvariantCulture)));
-            }
-            return points;
-        }
-        private void DrawEVAdoptionPie()
-        {
-            var points = GetLabeledValues("evadoption");   // "Electric (2025)|25.0", "Not electric|75.0"
 
+        // Pie of "Electric (2025)" vs "Not electric"
+        private void DrawEVAdoptionPie(List<(string Label, double Value)> points)
+        {
             var colors = new[] { ScottPlot.Colors.Green, ScottPlot.Colors.Gray };
             var slices = new List<ScottPlot.PieSlice>();
             for (int i = 0; i < points.Count; i++)
@@ -234,6 +223,7 @@ namespace Global_Warming_Index
             plot.Axes.Frameless();
             plot.HideGrid();
             plot.Title("Share of new cars sold that are electric (World)");
+            plot.Axes.AutoScale();
             pieChart.Refresh();
         }
     }

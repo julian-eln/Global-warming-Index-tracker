@@ -4,6 +4,11 @@
         xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         Title="Global Warming Index" Height="600" Width="900">
     <Grid Background="#FF310000" Margin="0,0,-406.667,-0.333">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="873*"/>
+            <ColumnDefinition Width="35*"/>
+            <ColumnDefinition Width="391*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <!-- 2: chart, fills the rest of the window -->
             <!-- 0: doomsday banner -->
@@ -15,18 +20,18 @@
         </Grid.RowDefinitions>
 
         <!-- Row 0: thresholds banner -->
-        <TextBlock Margin="0,0,546,176.667" Foreground="#FFFFC77A" FontSize="12" TextWrapping="Wrap"
+        <TextBlock Margin="15,0,157.333,166.667" Foreground="#FFFFC77A" FontSize="12" TextWrapping="Wrap"
                    Text="Commonly cited thresholds:  +1.5 °C (Paris goal)   +2.0 °C (Paris upper limit)   CO2 350 ppm (safe level)   560 ppm CO2e (double pre-industrial)" HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="394" Grid.RowSpan="4"/>
 
         <!-- Row 1: latest values (and any error message) -->
-        <TextBlock x:Name="current" Margin="0,61,5.333,56" Foreground="White" FontSize="20" TextWrapping="Wrap"
-                   Text="Loading..." Grid.Row="1"/>
+        <TextBlock x:Name="current" Margin="10,48,10,219.667" Foreground="White" TextWrapping="Wrap"
+                   Text="Loading..." Grid.Row="1" Grid.ColumnSpan="3" Grid.RowSpan="3" FontSize="9"/>
 
         <!-- Row 2: the chart. x:Name lets the C# code draw on it -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="-11,13,10,-24.333" Grid.RowSpan="2">
-            <ScottPlot:WpfPlot x:Name="co2Chart" Margin="8" Height="250" Width="200"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,17,-1.001,-28.333" Grid.RowSpan="2" Grid.ColumnSpan="3">
+            <ScottPlot:WpfPlot x:Name="co2Chart" Margin="8" Height="250" Width="220"/>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="213,22,368,-30.333" Grid.RowSpan="2" Height="369" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="229,25,351.999,-33.333" Grid.RowSpan="2" Height="369" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="3">
             <StackPanel.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -37,12 +42,13 @@
             </StackPanel.RenderTransform>
             <ScottPlot:WpfPlot x:Name="topChart" Margin="9" Height="250" Width="200"/>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="426,17,-252,-24.333" Grid.RowSpan="2" RenderTransformOrigin="0.471,0.493">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="430,21,-256.001,-28.333" Grid.RowSpan="2" RenderTransformOrigin="0.471,0.493" Grid.ColumnSpan="3">
             <ScottPlot:WpfPlot x:Name="investChart" Margin="8" Height="250" Width="180"/>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="626,0,-1102,-75.333" Grid.RowSpan="2" RenderTransformOrigin="0.471,0.493">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="624,0,-1100.001,-75.333" Grid.RowSpan="2" RenderTransformOrigin="0.471,0.493" Grid.ColumnSpan="3">
             <ScottPlot:WpfPlot x:Name="pieChart" Margin="8" Height="300" Width="250"/>
         </StackPanel>
-
+        <TextBlock x:Name="evCounter" Foreground="#FF7CFC7C" FontSize="22"
+           Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Margin="5,0,-0.001,9"/>
     </Grid>
 </Window>
