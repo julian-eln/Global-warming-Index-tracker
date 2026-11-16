@@ -1,43 +1,14 @@
 # Global Warming Index Tracker
 
-A desktop dashboard that shows where the planet stands on climate, with "doomsday" thresholds (1.5 °C, 2 °C, the remaining carbon budget) pinned at the top so every number has something to compare against.
+A desktop dashboard that shows where the planet stands on climate, with "doomsday" thresholds (1.5 °C, 2 °C, the remaining carbon budget) pinned at the top so every number has something to compare against. Made for 2026 UB Hackathon.
 
-**Team split**
-- **Python (data side):** fetches, cleans and caches data, then writes one JSON file: `Data/dashboard_data.json`.
-- **C# (app side):** a desktop UI that reads that JSON and draws it.
+# How it works
+Using Our World in Data NOAA yfinance API  Team trees(Arbor Day Foundation) theoceancleanup a python Backend Scapes this all for a C# windows form to take and then display to end user.   The numbers at the top were found using commonly cited sources (most of them listed in our scrape/apis discussed before).  The Data is a mix of derived data from yearly/quarterly reports and realtime trackers.  C# also handles the graphs/charts.
 
-```
- NOAA / NASA / OWID / yfinance ...      Python fetchers            C# desktop app
- ─────────────────────────────────►  python/build_dashboard.py ─► Data/dashboard_data.json ─► csharp/ (UI)
-```
+# Features
+Displays latest CO2, Greenhouse gases, and global temperature readings compared to Commonly cited thresholds. Also shows top polluting countries in a graph.  It also displays efforts to counteract warming like trees planted and kilos of trash removed in realtime.  It also displays how much money is being spent rolling out green energy (both by institutions and publicly traded companies) as well as EV total sales (as of 2019) and market share of EVs.  
 
-The JSON file is **the contract** between you two. Agree on its shape first (see `Data/SCHEMA.md`), then you can each work without blocking the other: C# builds against the sample file, Python makes the real data match it.
-
-## Repo layout
-
-| Path | Owner | What it is |
-|---|---|---|
-| `Data/dashboard_data.json` | both | Sample data in the agreed shape. C# develops against this. |
-| `Data/SCHEMA.md` | both | Field-by-field description of the JSON contract. |
-| `python/` | partner | Fetchers + the script that builds the JSON. |
-| `Global_Warming_Index/` | you | WPF desktop app. |
-| `csharp/README.md` | you | Pointers for the C# side (framework choice, JSON, binding, countdown). |
-| `docs/DATA_SOURCES.md` | both | Which sources actually have usable APIs (several on the wish list don't). |
-| `docs/PLAN.md` | both | MVP vs stretch goals, suggested order of work. |
-
-## Quick start
-
-**Python**
-```bash
-cd python
-python -m venv .venv
-# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-python build_dashboard.py          # writes ../Data/dashboard_data.json
-```
-
-**C#**: open `Global_Warming_Index/Global_Warming_Index.sln` in Visual Studio. Read `csharp/README.md` first; it starts with a framework decision worth making on day one.
-
-## Git workflow for two people
-- Never commit straight to `main` during the hackathon. Each of you works on a branch (`csharp-ui`, `python-fetchers`) and merges via pull request.
-- Because you touch different folders, merge conflicts should be rare. The one shared file is `Data/dashboard_data.json` — if you change its shape, update `Data/SCHEMA.md` in the same commit and tell your partner.
+# potential additions
+- a realtime natural disaster map (tracking tornadoes hurricanes and wildfires)
+- amount of electricty generated world wide (green vs non renewable)
+- cleaner UI changes/better ways of presenting the data
