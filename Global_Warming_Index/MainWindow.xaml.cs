@@ -105,16 +105,21 @@ namespace Global_Warming_Index
         }
 
         // Runs "python backend.py <arguments>" and returns everything it printed
+        // Runs the backend and returns everything it printed.
+        // Shipped app: uses backend\backend.exe next to the app. While developing: uses "python backend.py".
         private static string RunPython(string arguments)
         {
-            var psi = new ProcessStartInfo("python", "backend.py " + arguments)   // note the space after .py
-            {
-                WorkingDirectory = FindRepoRoot(),
-                RedirectStandardOutput = true,   // capture what Python prints
-                RedirectStandardError = true,    // capture Python's error messages too
-                UseShellExecute = false,         // required for capturing output
-                CreateNoWindow = true            // no console window flash
-            };
+            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string bundled = System.IO.Path.Combine(appDir, "backend", "backend.exe");
+
+            var psi = System.IO.File.Exists(bundled)
+                ? new ProcessStartInfo(bundled, arguments) { WorkingDirectory = appDir }
+                : new ProcessStartInfo("python", "backend.py " + arguments) { WorkingDirectory = FindRepoRoot() };
+
+            psi.RedirectStandardOutput = true;   // capture what Python prints
+            psi.RedirectStandardError = true;    // capture Python's error messages too
+            psi.UseShellExecute = false;         // required for capturing output
+            psi.CreateNoWindow = true;           // no console window flash
 
             using (var p = Process.Start(psi))
             {
@@ -126,9 +131,7 @@ namespace Global_Warming_Index
                     throw new Exception($"Python failed ({arguments}):\n" + errors);
                 return output;
             }
-        }
-
-        // For commands that print one number, e.g. "424.61"
+        }        // For commands that print one number, e.g. "424.61"
         private double GetLatest(string source)
         {
             return double.Parse(RunPython(source).Trim(), CultureInfo.InvariantCulture);

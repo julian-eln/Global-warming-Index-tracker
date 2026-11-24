@@ -383,7 +383,7 @@ if __name__ == "__main__":
         print(impact()["waste picked up"])
     elif what == "money_total":
         values = green_energy_investment()["data"].values()
-        print(round(sum(v["latest_value"] for v in values) / 1e9, 1))
+        print(round(sum(v["latest_value"] for v in values)))
     elif what == "Stock":
         # Capital RAISED by pure-play clean-energy companies, last 4 quarters, in $ billions
         print(round(fetch_clean_energy_money().get("total_invested_usd", 0)))
